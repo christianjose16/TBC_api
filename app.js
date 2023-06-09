@@ -1,11 +1,12 @@
 const express = require('express');
 const http = require('http');
+const cors = require('cors');
 
 const app = express();
 
 
 const port = 3000;
-
+app.use(cors());
 
 const getRequest = (url, headers) => {
   return new Promise((resolve, reject) => {
@@ -33,19 +34,31 @@ const getRequest = (url, headers) => {
     req.end();
   });
 };
+// Endpoint para obtener el listado de los archivos
+app.get('/files/list', async (req, res) => {
+  try {
+    const response = await getRequest('http://echo-serv.tbxnet.com/v1/secret/files', {
+      'Authorization': 'Bearer aSuperSecretKey',
+    });
 
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while retrieving the file list.' });
+  }
+});
 // Endpoint para obtener los datos formateados
 app.get('/files/data', async (req, res) => {
   try {
+    let files = [];
     const fileName = req.query.fileName;
     if(!fileName){
-    const filesResponse = await getRequest('http://echo-serv.tbxnet.com/v1/secret/files', {
-      'Authorization': 'Bearer aSuperSecretKey',
-    });
-    console.log(filesResponse.data);
-    const files = JSON.parse(filesResponse.data).files;
+      const filesResponse = await getRequest('http://echo-serv.tbxnet.com/v1/secret/files', {
+        'Authorization': 'Bearer aSuperSecretKey',
+      });
+      console.log(filesResponse.data);
+      files = JSON.parse(filesResponse.data).files;
     }else{
-      const files = [fileName]
+      files.push(fileName);
     }
     const formattedData = [];
 
